@@ -5,6 +5,7 @@ import (
 	"encoding/gob"
 	"fmt"
 	"net"
+	"strconv"
 )
 
 type Vector2 struct {
@@ -12,6 +13,7 @@ type Vector2 struct {
 }
 
 type Player struct {
+    ID                    string
 	Pos                   Vector2
 	Height, Width, Health int32
 }
@@ -36,6 +38,7 @@ func main() {
 	fmt.Println("Server is listening on:", addr)
 
 	clients := make(map[string]*Client)
+    clientID := 1
 
 	gob.Register(Vector2{})
 
@@ -54,6 +57,14 @@ func main() {
 			fmt.Println("Error decoding player data:", err)
 			continue
 		}
+
+        playerID := strconv.Itoa(clientID)
+        if _, exists := clients[clientAddr.String()]; !exists {
+            clientID++
+            player.ID = playerID
+        }
+
+        fmt.Println("Received player data from:", clientAddr, player)
 
 		// Update or add client
 		clients[clientAddr.String()] = &Client{clientAddr: *clientAddr, player: player}

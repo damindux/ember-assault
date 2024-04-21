@@ -1,10 +1,6 @@
 package main
 
-import (
-	"fmt"
-
-	rl "github.com/gen2brain/raylib-go/raylib"
-)
+import rl "github.com/gen2brain/raylib-go/raylib"
 
 const (
 	WINDOW_WIDTH  = 1280
@@ -12,18 +8,13 @@ const (
 	MAX_BULLETS   = 30
 )
 
-type Player struct {
-	Pos                   rl.Vector2
-	Width, Height, Health int
-}
-
 type Bullet struct {
 	Pos    rl.Vector2
 	Vel    rl.Vector2
 	Active bool
 }
 
-// var gameOver bool = false
+var gameOver bool = false
 var activeBullets int = 0
 var bullets [MAX_BULLETS]Bullet
 
@@ -96,45 +87,28 @@ func updateGame(player *Player, bullets *[MAX_BULLETS]Bullet) rl.Vector2 {
 	return mousePosition
 }
 
-func updateDrawGame(player *Player, bullets *[MAX_BULLETS]Bullet) {
-	mousePosition := updateGame(player, bullets)
-	drawGame(mousePosition, player, bullets)
-}
-
-func initGame(bullets *[MAX_BULLETS]Bullet) {
-	for i := range bullets {
-		bullets[i].Active = false
-	}
-}
-
 func main() {
 	rl.InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Client")
-	rl.HideCursor()
 	rl.SetTargetFPS(60)
 
 	defer rl.CloseWindow()
 
-	player := Player{
-		Pos:    rl.Vector2{X: 100.0, Y: 100.0},
-		Width:  50,
-		Height: 50,
-		Health: 100,
-	}
 
-	netClient, err := InitNetworkClient("127.0.0.1", 10000, &player)
-	if err != nil {
-		fmt.Println("Error initializing network client:", err)
-		return
-	}
+    game := Game{
+        player: &Player{
+            Pos: rl.Vector2{X: 100, Y: 100},
+            Width: 50,
+            Height: 50,
+            Health: 100,
+        },
+    }
+    game.Init()
 
-	go netClient.SendPlayerData()
-	go netClient.ReceiveUpdates()
-
-	defer netClient.conn.Close()
-
-	initGame(&bullets)
-
+    defer game.Close()
+    
 	for !rl.WindowShouldClose() {
-		updateDrawGame(&player, &bullets)
+        if game.stateMachine.currentState != nil {
+            game.stateMachine.currentState.OnExecute()
+        }
 	}
 }

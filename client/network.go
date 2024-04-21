@@ -71,9 +71,6 @@ func (nc *NetworkClient) ReceiveUpdates() {
 			fmt.Println("Error decoding data from server:", err)
 			continue
 		}
-
-		// Handle the received players update, e.g., update the game state or UI
-		fmt.Println("Received updates:", players)
 	}
 }
 
